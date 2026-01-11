@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-echo "=== dbt-stale Integration Tests ==="
+echo "=== dbt-orphan Integration Tests ==="
 echo ""
 
 echo "1. Installing dependencies..."
@@ -16,12 +16,12 @@ echo "3. Creating orphan tables (not in dbt graph)..."
 dbt run-operation create_orphan_tables
 
 echo ""
-echo "4. Running cleanup_stale_by_graph (dry_run first)..."
-dbt run-operation dbt_stale.cleanup_stale_by_graph --args '{dry_run: true}'
+echo "4. Running cleanup_orphans (dry_run first)..."
+dbt run-operation dbt_orphan.cleanup_orphans --args '{schemas: ["test_dbt_orphan"], dry_run: true}'
 
 echo ""
-echo "5. Running cleanup_stale_by_graph (actual cleanup)..."
-dbt run-operation dbt_stale.cleanup_stale_by_graph --args '{dry_run: false}'
+echo "5. Running cleanup_orphans (actual cleanup)..."
+dbt run-operation dbt_orphan.cleanup_orphans --args '{schemas: ["test_dbt_orphan"], dry_run: false}'
 
 echo ""
 echo "6. Running tests to verify results..."

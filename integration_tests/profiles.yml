@@ -3,7 +3,7 @@ integration_tests_duckdb:
   outputs:
     dev:
       type: duckdb
-      path: "../duckdb/test_dbt_stale.duckdb"
+      path: "../duckdb/test_dbt_orphan.duckdb"
 
 integration_tests_postgres:
   target: postgres
@@ -14,6 +14,6 @@ integration_tests_postgres:
       user: newuser
       pass: password
       port: 5432
-      dbname: dbt_stale
-      schema: public
+      dbname: dbt_orphan
+      schema: test_dbt_orphan
       threads: 1

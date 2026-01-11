@@ -18,7 +18,7 @@ cd integration_tests
 dbt deps
 dbt run
 dbt run-operation create_orphan_tables
-dbt run-operation dbt_stale.cleanup_stale_by_graph --args '{dry_run: false}'
+dbt run-operation dbt_orphan.cleanup_orphans --args '{schemas: ["test_dbt_orphan"], dry_run: false}'
 dbt test
 ```
 

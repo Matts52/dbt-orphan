@@ -1,0 +1,4 @@
+packages:
+  - local: ../
+    name: dbt_orphan
+sha1_hash: de2deba3d66ce03d8c02949013650cc9b94f6030

@@ -1,4 +1,4 @@
-name: "dbt_stale_integration_tests"
+name: "dbt_orphan_integration_tests"
 version: "0.1.0"
 
 config-version: 2
