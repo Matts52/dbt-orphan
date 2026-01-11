@@ -4,3 +4,16 @@ integration_tests_duckdb:
     dev:
       type: duckdb
       path: "../duckdb/test_dbt_stale.duckdb"
+
+integration_tests_postgres:
+  target: postgres
+  outputs:
+    postgres:
+      type: postgres
+      host: localhost
+      user: newuser
+      pass: password
+      port: 5432
+      dbname: dbt_stale
+      schema: public
+      threads: 1
