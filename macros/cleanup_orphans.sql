@@ -1,21 +1,26 @@
-{% macro cleanup_stale_by_graph(database=target.database, schema=target.schema, dry_run=true, exclude_patterns=[]) %}
+{% macro cleanup_orphans(database=target.database, schemas=[target.schema], dry_run=true, exclude_patterns=[]) %}
 
-    {# Build set of object names managed by dbt in this schema #}
-    {% set dbt_objects = [] %}
-    {% for node in graph.nodes.values() %}
-        {% if node.resource_type in ['model', 'seed', 'snapshot'] %}
-            {% if node.schema | lower == schema | lower %}
-                {% if node.database | lower == database | lower or node.database is none %}
-                    {% do dbt_objects.append(node.name | lower) %}
+    {# Process each schema #}
+    {% for schema in schemas %}
+        {{ log('Processing schema: ' ~ database ~ '.' ~ schema, info=true) }}
+
+        {# Build set of object names managed by dbt in this schema #}
+        {% set dbt_objects = [] %}
+        {% for node in graph.nodes.values() %}
+            {% if node.resource_type in ['model', 'seed', 'snapshot'] %}
+                {% if node.schema | lower == schema | lower %}
+                    {% if node.database | lower == database | lower or node.database is none %}
+                        {% do dbt_objects.append(node.name | lower) %}
+                    {% endif %}
                 {% endif %}
             {% endif %}
-        {% endif %}
-    {% endfor %}
+        {% endfor %}
 
-    {{ return(adapter.dispatch('cleanup_stale_by_graph', 'dbt_stale')(database, schema, dry_run, exclude_patterns, dbt_objects)) }}
+        {% do adapter.dispatch('cleanup_orphans', 'dbt_orphan')(database, schema, dry_run, exclude_patterns, dbt_objects) %}
+    {% endfor %}
 {% endmacro %}
 
-{% macro default__cleanup_stale_by_graph(database, schema, dry_run, exclude_patterns, dbt_objects) %}
+{% macro default__cleanup_orphans(database, schema, dry_run, exclude_patterns, dbt_objects) %}
     {% set db_objects_query %}
         select
             table_name,
@@ -65,7 +70,7 @@
 {% endmacro %}
 
 
-{% macro snowflake__cleanup_stale_by_graph(database, schema, dry_run, exclude_patterns, dbt_objects) %}
+{% macro snowflake__cleanup_orphans(database, schema, dry_run, exclude_patterns, dbt_objects) %}
     {% set db_objects_query %}
         select
             table_name,

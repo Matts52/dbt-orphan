@@ -1,0 +1,27 @@
+version: 2
+
+macros:
+  - name: cleanup_orphans
+    description: >
+      Identifies and drops database objects (tables and views) that exist in the target schema
+      but are not defined in the dbt project graph. Useful for cleaning up stale artifacts
+      after models are renamed or deleted.
+    arguments:
+      - name: database
+        type: string
+        description: The database to scan for orphaned objects. Defaults to target.database.
+      - name: schemas
+        type: list
+        description: >
+          List of schemas to scan for orphaned objects. Defaults to [target.schema] if empty.
+          Example: ["public", "analytics", "staging"]
+      - name: dry_run
+        type: boolean
+        description: >
+          When true, logs which objects would be dropped without actually dropping them.
+          Defaults to true for safety.
+      - name: exclude_patterns
+        type: list
+        description: >
+          List of SQL LIKE patterns for table names to exclude from cleanup.
+          Example: ["%_backup", "temp_%"]
