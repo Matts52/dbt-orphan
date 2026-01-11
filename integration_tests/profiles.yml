@@ -1,0 +1,6 @@
+integration_tests_duckdb:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      path: "../duckdb/test_dbt_stale.duckdb"

@@ -1,0 +1,11 @@
+name: "dbt_stale"
+version: "0.1.0"
+
+require-dbt-version: [">=1.1.0", "<3.0.0"]
+config-version: 2
+
+model-paths: ["models"]
+target-path: "target"
+clean-targets: ["target", "dbt_modules"]
+macro-paths: ["macros"]
+log-path: "logs"

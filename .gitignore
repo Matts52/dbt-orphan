@@ -1,0 +1,12 @@
+target/
+dbt_modules/
+dbt_packages/
+logs/
+env/
+.venv/
+.env/
+venv/
+duckdb/
+integration_tests/.user.yml
+.sqlfluff
+.DS_Store
