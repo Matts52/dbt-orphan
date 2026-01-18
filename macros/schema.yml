@@ -25,3 +25,23 @@ macros:
         description: >
           List of SQL LIKE patterns for table names to exclude from cleanup.
           Example: ["%_backup", "temp_%"]
+
+  - name: get_orphans
+    description: >
+      Returns SQL that selects all orphaned database objects (tables and views) that exist
+      in the target schema but are not defined in the dbt project graph. Use this macro
+      in a dbt model to materialize a table of orphaned objects for inspection or reporting.
+    arguments:
+      - name: database
+        type: string
+        description: The database to scan for orphaned objects. Defaults to target.database.
+      - name: schemas
+        type: list
+        description: >
+          List of schemas to scan for orphaned objects. Defaults to [target.schema].
+          Example: ["public", "analytics", "staging"]
+      - name: exclude_patterns
+        type: list
+        description: >
+          List of SQL LIKE patterns for table names to exclude from results.
+          Example: ["%_backup", "temp_%"]

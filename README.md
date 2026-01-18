@@ -63,6 +63,37 @@ on-run-end:
   - "{{ dbt_orphan.cleanup_orphans(schemas=['analytics'], dry_run=false, exclude_patterns=['%_backup', 'tmp_%']) }}"
 ```
 
+## Materializing Orphans as a Model
+
+Use the `get_orphans` macro to create a model that lists all orphaned objects without dropping them. This is useful for reporting, auditing, or reviewing orphans before cleanup.
+
+### Basic Usage
+
+```sql
+-- models/orphaned_objects.sql
+{{ dbt_orphan.get_orphans() }}
+```
+
+### With Options
+
+```sql
+-- models/orphaned_objects.sql
+{{ dbt_orphan.get_orphans(
+    schemas=['analytics', 'staging', 'marts'],
+    exclude_patterns=['%_backup', 'temp_%']
+) }}
+```
+
+### Output Columns
+
+| Column | Description |
+|--------|-------------|
+| `database_name` | The database containing the orphan |
+| `schema_name` | The schema containing the orphan |
+| `table_name` | The orphaned table or view name |
+| `table_type` | Either 'BASE TABLE' or 'VIEW' |
+| `full_name` | Fully qualified `schema.table_name` |
+
 ## How It Works
 
 1. For each schema in the provided list, the macro collects all models, seeds, and snapshots defined in the dbt graph
