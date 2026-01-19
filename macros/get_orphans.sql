@@ -9,7 +9,8 @@
         {% do dbt_objects_by_schema.update({schema | lower: []}) %}
     {% endfor %}
 
-    {% for node in graph.nodes.values() %}
+    {% set nodes_dict = graph.get('nodes', graph) %}
+    {% for unique_id, node in nodes_dict.items() %}
         {% if node.resource_type in ['model', 'seed', 'snapshot'] %}
             {% set node_schema = node.schema | lower %}
             {% if node_schema in dbt_objects_by_schema %}
@@ -76,7 +77,8 @@
         {% do dbt_objects_by_schema.update({schema | lower: []}) %}
     {% endfor %}
 
-    {% for node in graph.nodes.values() %}
+    {% set nodes_dict = graph.get('nodes', graph) %}
+    {% for unique_id, node in nodes_dict.items() %}
         {% if node.resource_type in ['model', 'seed', 'snapshot'] %}
             {% set node_schema = node.schema | lower %}
             {% if node_schema in dbt_objects_by_schema %}

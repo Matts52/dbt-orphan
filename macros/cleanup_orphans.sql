@@ -6,7 +6,9 @@
 
         {# Build set of object names managed by dbt in this schema #}
         {% set dbt_objects = [] %}
-        {% for node in graph.nodes.values() %}
+
+        {% set nodes_dict = graph.get('nodes', graph) %}
+        {% for unique_id, node in nodes_dict.items() %}
             {% if node.resource_type in ['model', 'seed', 'snapshot'] %}
                 {% if node.schema | lower == schema | lower %}
                     {% if node.database | lower == database | lower or node.database is none %}
