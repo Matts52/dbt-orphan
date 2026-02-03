@@ -26,43 +26,6 @@ dbt deps
 
 ## Usage
 
-### Recommended: Project-level Post-hook
-
-Add `cleanup_orphans` as a post-hook in your `dbt_project.yml` to automatically clean up orphans after each run:
-
-```yaml
-on-run-end:
-  - "{{ dbt_orphan.cleanup_orphans(schemas=['analytics', 'staging', 'marts'], dry_run=false) }}"
-```
-
-**Important:** You must explicitly list all schemas you want to clean. The macro will only remove orphans from the schemas you specify.
-
-### Manual Execution
-
-```bash
-# Dry run - preview what would be dropped
-dbt run-operation dbt_orphan.cleanup_orphans --args '{schemas: ["analytics", "staging"], dry_run: true}'
-
-# Actual cleanup
-dbt run-operation dbt_orphan.cleanup_orphans --args '{schemas: ["analytics", "staging"], dry_run: false}'
-```
-
-## Parameters
-
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `database` | string | `target.database` | Database to scan |
-| `schemas` | list | `[target.schema]` | List of schemas to scan for orphans |
-| `dry_run` | boolean | `true` | When true, only logs what would be dropped |
-| `exclude_patterns` | list | `[]` | SQL LIKE patterns for table names to exclude |
-
-## Example with Exclude Patterns
-
-```yaml
-on-run-end:
-  - "{{ dbt_orphan.cleanup_orphans(schemas=['analytics'], dry_run=false, exclude_patterns=['%_backup', 'tmp_%']) }}"
-```
-
 ## Materializing Orphans as a Model
 
 Use the `get_orphans` macro to create a model that lists all orphaned objects without dropping them. This is useful for reporting, auditing, or reviewing orphans before cleanup.
@@ -100,6 +63,44 @@ Use the `get_orphans` macro to create a model that lists all orphaned objects wi
 2. Queries `information_schema.tables` for all existing tables and views in that schema
 3. Compares the two sets and drops any objects not in the dbt graph
 4. Logs all actions taken (or would be taken in dry_run mode)
+
+
+## Optional: Project-level Post-hook
+
+You can add `cleanup_orphans` as a post-hook in your `dbt_project.yml` to automatically clean up orphans after each run:
+
+```yaml
+on-run-end:
+  - "{{ dbt_orphan.cleanup_orphans(schemas=['analytics', 'staging', 'marts'], dry_run=false) }}"
+```
+
+**Important:** You must explicitly list all schemas you want to clean. The macro will only remove orphans from the schemas you specify.
+
+### Manual Execution
+
+```bash
+# Dry run - preview what would be dropped
+dbt run-operation dbt_orphan.cleanup_orphans --args '{schemas: ["analytics", "staging"], dry_run: true}'
+
+# Actual cleanup
+dbt run-operation dbt_orphan.cleanup_orphans --args '{schemas: ["analytics", "staging"], dry_run: false}'
+```
+
+## Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `database` | string | `target.database` | Database to scan |
+| `schemas` | list | `[target.schema]` | List of schemas to scan for orphans |
+| `dry_run` | boolean | `true` | When true, only logs what would be dropped |
+| `exclude_patterns` | list | `[]` | SQL LIKE patterns for table names to exclude |
+
+## Example with Exclude Patterns
+
+```yaml
+on-run-end:
+  - "{{ dbt_orphan.cleanup_orphans(schemas=['analytics'], dry_run=false, exclude_patterns=['%_backup', 'tmp_%']) }}"
+```
 
 ## Safety
 
