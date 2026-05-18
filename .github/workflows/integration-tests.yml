@@ -1,0 +1,26 @@
+name: Integration Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test-duckdb:
+    name: Integration Tests (DuckDB)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dbt-duckdb
+        run: pip install dbt-duckdb
+
+      - name: Run integration tests
+        run: bash scripts/run_integration_tests_duckdb.sh

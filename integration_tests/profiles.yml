@@ -3,7 +3,8 @@ integration_tests_duckdb:
   outputs:
     dev:
       type: duckdb
-      path: "../duckdb/test_dbt_orphan.duckdb"
+      path: "../duckdb/integration_test.duckdb"
+      schema: test_dbt_orphan
 
 integration_tests_postgres:
   target: postgres
