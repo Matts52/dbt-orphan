@@ -7,6 +7,7 @@ A dbt package that automatically cleans up orphaned database objects (tables and
 - PostgreSQL
 - Snowflake
 - DuckDB
+- BigQuery
 
 ## Installation
 
