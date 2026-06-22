@@ -1,8 +1,8 @@
-{% macro get_orphans(database=target.database, schemas=[target.schema], exclude_patterns=[]) %}
-    {{ return(adapter.dispatch('get_orphans', 'dbt_orphan')(database, schemas, exclude_patterns)) }}
+{% macro get_orphans(database=target.database, schemas=[target.schema], exclude_patterns=[], include_patterns=[]) %}
+    {{ return(adapter.dispatch('get_orphans', 'dbt_orphan')(database, schemas, exclude_patterns, include_patterns)) }}
 {% endmacro %}
 
-{% macro default__get_orphans(database, schemas, exclude_patterns) %}
+{% macro default__get_orphans(database, schemas, exclude_patterns, include_patterns) %}
     {# Build set of object names managed by dbt across all specified schemas #}
     {% set dbt_objects_by_schema = {} %}
     {% for schema in schemas %}
@@ -53,6 +53,13 @@
         {% for pattern in exclude_patterns %}
             and lower(table_name) not like lower('{{ pattern }}')
         {% endfor %}
+        {% if include_patterns | length > 0 %}
+            and (
+                {% for pattern in include_patterns %}
+                    lower(table_name) like lower('{{ pattern }}'){% if not loop.last %} or {% endif %}
+                {% endfor %}
+            )
+        {% endif %}
     )
 
     select
@@ -70,7 +77,7 @@
 {% endmacro %}
 
 
-{% macro snowflake__get_orphans(database, schemas, exclude_patterns) %}
+{% macro snowflake__get_orphans(database, schemas, exclude_patterns, include_patterns) %}
     {# Build set of object names managed by dbt across all specified schemas #}
     {% set dbt_objects_by_schema = {} %}
     {% for schema in schemas %}
@@ -121,6 +128,13 @@
         {% for pattern in exclude_patterns %}
             and lower(table_name) not like lower('{{ pattern }}')
         {% endfor %}
+        {% if include_patterns | length > 0 %}
+            and (
+                {% for pattern in include_patterns %}
+                    lower(table_name) like lower('{{ pattern }}'){% if not loop.last %} or {% endif %}
+                {% endfor %}
+            )
+        {% endif %}
     )
 
     select
