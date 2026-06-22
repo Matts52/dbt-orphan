@@ -44,7 +44,8 @@ Use the `get_orphans` macro to create a model that lists all orphaned objects wi
 -- models/orphaned_objects.sql
 {{ dbt_orphan.get_orphans(
     schemas=['analytics', 'staging', 'marts'],
-    exclude_patterns=['%_backup', 'temp_%']
+    exclude_patterns=['%_backup', 'temp_%'],
+    include_patterns=['stg_%', 'int_%']
 ) }}
 ```
 
@@ -95,6 +96,7 @@ dbt run-operation dbt_orphan.cleanup_orphans --args '{schemas: ["analytics", "st
 | `schemas` | list | `[target.schema]` | List of schemas to scan for orphans |
 | `dry_run` | boolean | `true` | When true, only logs what would be dropped |
 | `exclude_patterns` | list | `[]` | SQL LIKE patterns for table names to exclude |
+| `include_patterns` | list | `[]` | SQL LIKE patterns — when non-empty, only matching table names are searched |
 
 ## Example with Exclude Patterns
 
@@ -103,11 +105,21 @@ on-run-end:
   - "{{ dbt_orphan.cleanup_orphans(schemas=['analytics'], dry_run=false, exclude_patterns=['%_backup', 'tmp_%']) }}"
 ```
 
+## Example with Include Patterns
+
+```yaml
+on-run-end:
+  - "{{ dbt_orphan.cleanup_orphans(schemas=['analytics'], dry_run=false, include_patterns=['stg_%', '%_v2']) }}"
+```
+
+When `include_patterns` is specified, **only** objects whose names match at least one pattern are considered for orphan detection and cleanup. This is useful when you want to target a specific subset of objects rather than scanning everything in a schema. `include_patterns` and `exclude_patterns` can be combined — inclusions are applied first, then exclusions are applied to the resulting set.
+
 ## Safety
 
 - **Always test with `dry_run: true` first** to preview what will be dropped
 - Only schemas explicitly listed will be scanned
 - Use `exclude_patterns` to protect tables that exist outside of dbt
+- Use `include_patterns` to limit scanning to a specific subset of table names (e.g. a single naming convention)
 - **Run against the same target/environment as the schemas you are scanning.** The orphan comparison works by matching database objects against nodes in the dbt graph. If you invoke the macro with a `dev` target but point `schemas` at production datasets, every production table will appear orphaned because the graph nodes carry the dev database and schema names. Always ensure `target.database` and `target.schema` match the environment you intend to clean.
 
 ## Adapter Notes

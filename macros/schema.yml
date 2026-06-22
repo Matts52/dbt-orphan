@@ -25,6 +25,13 @@ macros:
         description: >
           List of SQL LIKE patterns for table names to exclude from cleanup.
           Example: ["%_backup", "temp_%"]
+      - name: include_patterns
+        type: list
+        description: >
+          List of SQL LIKE patterns for table names to include in the search.
+          When non-empty, only objects whose names match at least one pattern are considered.
+          If empty (default), all objects in the schema are considered.
+          Example: ["stg_%", "%_v2"]
 
   - name: get_orphans
     description: >
@@ -45,3 +52,10 @@ macros:
         description: >
           List of SQL LIKE patterns for table names to exclude from results.
           Example: ["%_backup", "temp_%"]
+      - name: include_patterns
+        type: list
+        description: >
+          List of SQL LIKE patterns for table names to include in the search.
+          When non-empty, only objects whose names match at least one pattern are considered.
+          If empty (default), all objects in the schema are considered.
+          Example: ["stg_%", "%_v2"]
