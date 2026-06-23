@@ -1,4 +1,4 @@
-{% macro cleanup_orphans(database=target.database, schemas=[target.schema], dry_run=true, exclude_patterns=[]) %}
+{% macro cleanup_orphans(database=target.database, schemas=[target.schema], dry_run=true, exclude_patterns=[], include_patterns=[]) %}
 
     {# Process each schema #}
     {% for schema in schemas %}
@@ -18,11 +18,11 @@
             {% endif %}
         {% endfor %}
 
-        {% do adapter.dispatch('cleanup_orphans', 'dbt_orphan')(database, schema, dry_run, exclude_patterns, dbt_objects) %}
+        {% do adapter.dispatch('cleanup_orphans', 'dbt_orphan')(database, schema, dry_run, exclude_patterns, include_patterns, dbt_objects) %}
     {% endfor %}
 {% endmacro %}
 
-{% macro default__cleanup_orphans(database, schema, dry_run, exclude_patterns, dbt_objects) %}
+{% macro default__cleanup_orphans(database, schema, dry_run, exclude_patterns, include_patterns, dbt_objects) %}
     {% set db_objects_query %}
         select
             table_name,
@@ -33,6 +33,13 @@
             {% for pattern in exclude_patterns %}
                 and lower(table_name) not like lower('{{ pattern }}')
             {% endfor %}
+            {% if include_patterns | length > 0 %}
+                and (
+                    {% for pattern in include_patterns %}
+                        lower(table_name) like lower('{{ pattern }}'){% if not loop.last %} or {% endif %}
+                    {% endfor %}
+                )
+            {% endif %}
         order by table_name
     {% endset %}
 
@@ -72,7 +79,7 @@
 {% endmacro %}
 
 
-{% macro bigquery__cleanup_orphans(database, schema, dry_run, exclude_patterns, dbt_objects) %}
+{% macro bigquery__cleanup_orphans(database, schema, dry_run, exclude_patterns, include_patterns, dbt_objects) %}
     {% set db_objects_query %}
         select
             table_name,
@@ -82,6 +89,13 @@
             {% for pattern in exclude_patterns %}
                 and lower(table_name) not like lower('{{ pattern }}')
             {% endfor %}
+            {% if include_patterns | length > 0 %}
+                and (
+                    {% for pattern in include_patterns %}
+                        lower(table_name) like lower('{{ pattern }}'){% if not loop.last %} or {% endif %}
+                    {% endfor %}
+                )
+            {% endif %}
         order by table_name
     {% endset %}
 
@@ -122,7 +136,7 @@
 {% endmacro %}
 
 
-{% macro snowflake__cleanup_orphans(database, schema, dry_run, exclude_patterns, dbt_objects) %}
+{% macro snowflake__cleanup_orphans(database, schema, dry_run, exclude_patterns, include_patterns, dbt_objects) %}
     {% set db_objects_query %}
         select
             table_name,
@@ -133,6 +147,13 @@
             {% for pattern in exclude_patterns %}
                 and lower(table_name) not like lower('{{ pattern }}')
             {% endfor %}
+            {% if include_patterns | length > 0 %}
+                and (
+                    {% for pattern in include_patterns %}
+                        lower(table_name) like lower('{{ pattern }}'){% if not loop.last %} or {% endif %}
+                    {% endfor %}
+                )
+            {% endif %}
         order by table_name
     {% endset %}
 
