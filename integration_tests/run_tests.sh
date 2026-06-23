@@ -24,8 +24,20 @@ echo "5. Running cleanup_orphans (actual cleanup)..."
 dbt run-operation dbt_orphan.cleanup_orphans --args '{schemas: ["test_dbt_orphan"], dry_run: false}'
 
 echo ""
-echo "6. Running tests to verify results..."
+echo "6. Creating include_pattern test tables..."
+dbt run-operation create_include_pattern_test_tables
+
+echo ""
+echo "7. Running cleanup_orphans with include_patterns (should only drop incl_orphan_for_testing)..."
+dbt run-operation dbt_orphan.cleanup_orphans --args '{schemas: ["test_dbt_orphan"], dry_run: false, include_patterns: ["incl_%"]}'
+
+echo ""
+echo "8. Running tests to verify results..."
 dbt test
+
+echo ""
+echo "9. Final cleanup of remaining test artifacts..."
+dbt run-operation dbt_orphan.cleanup_orphans --args '{schemas: ["test_dbt_orphan"], dry_run: false}'
 
 echo ""
 echo "=== All tests passed! ==="
