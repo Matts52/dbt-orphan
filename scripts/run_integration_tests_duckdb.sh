@@ -36,8 +36,24 @@ dbt run-operation dbt_orphan.cleanup_orphans \
   --profile integration_tests_duckdb
 
 echo ""
-echo "6. Running tests..."
+echo "6. Creating include_pattern test tables..."
+dbt run-operation create_include_pattern_test_tables --profile integration_tests_duckdb
+
+echo ""
+echo "7. Running cleanup_orphans with include_patterns (should only drop incl_orphan_for_testing)..."
+dbt run-operation dbt_orphan.cleanup_orphans \
+  --args '{schemas: ["test_dbt_orphan"], dry_run: false, include_patterns: ["incl_%"]}' \
+  --profile integration_tests_duckdb
+
+echo ""
+echo "8. Running tests..."
 dbt test --profile integration_tests_duckdb
+
+echo ""
+echo "9. Final cleanup of remaining test artifacts..."
+dbt run-operation dbt_orphan.cleanup_orphans \
+  --args '{schemas: ["test_dbt_orphan"], dry_run: false}' \
+  --profile integration_tests_duckdb
 
 echo ""
 echo "=== All tests passed! ==="
