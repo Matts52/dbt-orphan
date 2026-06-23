@@ -76,7 +76,6 @@
     order by db.schema_name, db.original_table_name
 {% endmacro %}
 
-
 {% macro bigquery__get_orphans(database, schemas, exclude_patterns, include_patterns) %}
     {# Build set of object names managed by dbt across all specified schemas #}
     {% set dbt_objects_by_schema = {} %}

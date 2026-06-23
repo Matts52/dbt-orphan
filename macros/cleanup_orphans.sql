@@ -78,7 +78,6 @@
     {% endif %}
 {% endmacro %}
 
-
 {% macro bigquery__cleanup_orphans(database, schema, dry_run, exclude_patterns, include_patterns, dbt_objects) %}
     {% set db_objects_query %}
         select
@@ -134,7 +133,6 @@
         {{ log('No orphaned objects found in ' ~ database ~ '.' ~ schema, info=true) }}
     {% endif %}
 {% endmacro %}
-
 
 {% macro snowflake__cleanup_orphans(database, schema, dry_run, exclude_patterns, include_patterns, dbt_objects) %}
     {% set db_objects_query %}
