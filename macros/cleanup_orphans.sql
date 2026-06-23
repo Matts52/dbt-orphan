@@ -78,6 +78,61 @@
     {% endif %}
 {% endmacro %}
 
+{% macro bigquery__cleanup_orphans(database, schema, dry_run, exclude_patterns, include_patterns, dbt_objects) %}
+    {% set db_objects_query %}
+        select
+            table_name,
+            table_type
+        from {{ adapter.quote(database) }}.{{ schema }}.INFORMATION_SCHEMA.TABLES
+        where table_type in ('BASE TABLE', 'VIEW')
+            {% for pattern in exclude_patterns %}
+                and lower(table_name) not like lower('{{ pattern }}')
+            {% endfor %}
+            {% if include_patterns | length > 0 %}
+                and (
+                    {% for pattern in include_patterns %}
+                        lower(table_name) like lower('{{ pattern }}'){% if not loop.last %} or {% endif %}
+                    {% endfor %}
+                )
+            {% endif %}
+        order by table_name
+    {% endset %}
+
+    {% set db_objects_result = run_query(db_objects_query) %}
+
+    {% set orphaned_count = [] %}
+    {% if db_objects_result %}
+        {% for row in db_objects_result %}
+            {% set obj_name = row['table_name'] | lower %}
+            {% if obj_name not in dbt_objects %}
+                {% set object_type = 'VIEW' if row['table_type'] == 'VIEW' else 'TABLE' %}
+                {# Backtick-qualify all parts since BigQuery project IDs can contain hyphens #}
+                {% set full_name = '`' ~ database ~ '`.' ~ '`' ~ schema ~ '`.' ~ '`' ~ row['table_name'] ~ '`' %}
+
+                {% if dry_run %}
+                    {{ log('[DRY RUN] Would drop ' ~ object_type ~ ' ' ~ full_name ~ ' (not in dbt graph)', info=true) }}
+                {% else %}
+                    {{ log('Dropping orphaned ' ~ object_type ~ ' ' ~ full_name ~ ' (not in dbt graph)', info=true) }}
+                    {% set drop_statement %}
+                        DROP {{ object_type }} IF EXISTS {{ full_name }}
+                    {% endset %}
+                    {% do run_query(drop_statement) %}
+                {% endif %}
+                {% do orphaned_count.append(1) %}
+            {% endif %}
+        {% endfor %}
+    {% endif %}
+
+    {% if orphaned_count | length > 0 %}
+        {% if dry_run %}
+            {{ log('[DRY RUN] Found ' ~ orphaned_count | length ~ ' orphaned object(s) that would be dropped', info=true) }}
+        {% else %}
+            {{ log('Dropped ' ~ orphaned_count | length ~ ' orphaned object(s)', info=true) }}
+        {% endif %}
+    {% else %}
+        {{ log('No orphaned objects found in ' ~ database ~ '.' ~ schema, info=true) }}
+    {% endif %}
+{% endmacro %}
 
 {% macro snowflake__cleanup_orphans(database, schema, dry_run, exclude_patterns, include_patterns, dbt_objects) %}
     {% set db_objects_query %}

@@ -7,6 +7,7 @@ A dbt package that automatically cleans up orphaned database objects (tables and
 - PostgreSQL
 - Snowflake
 - DuckDB
+- BigQuery
 
 ## Installation
 
@@ -107,3 +108,14 @@ on-run-end:
 - **Always test with `dry_run: true` first** to preview what will be dropped
 - Only schemas explicitly listed will be scanned
 - Use `exclude_patterns` to protect tables that exist outside of dbt
+- **Run against the same target/environment as the schemas you are scanning.** The orphan comparison works by matching database objects against nodes in the dbt graph. If you invoke the macro with a `dev` target but point `schemas` at production datasets, every production table will appear orphaned because the graph nodes carry the dev database and schema names. Always ensure `target.database` and `target.schema` match the environment you intend to clean.
+
+## Adapter Notes
+
+### BigQuery
+
+Tested on a live dbt-BigQuery project (dbt 1.10.13, dbt-bigquery 1.10.2) with dry-run against several datasets.
+
+- Hyphenated project IDs (e.g. `xyz-dev`) are handled correctly via `adapter.quote(database)`, both in the `INFORMATION_SCHEMA` reference and in the backtick-qualified DROP targets.
+- `get_orphans` unions across all requested datasets in a single query; results are consistent with what `cleanup_orphans` flags per schema.
+- Because BigQuery's `INFORMATION_SCHEMA` is per-dataset, the macro issues one sub-query per schema and unions the results — this is expected behaviour and not a performance concern for typical schema counts.
