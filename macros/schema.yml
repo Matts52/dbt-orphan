@@ -11,22 +11,22 @@ macros:
         type: string
         description: The database to scan for orphaned objects. Defaults to target.database.
       - name: schemas
-        type: list
+        type: list[str]
         description: >
           List of schemas to scan for orphaned objects. Defaults to [target.schema] if empty.
           Example: ["public", "analytics", "staging"]
       - name: dry_run
-        type: boolean
+        type: bool
         description: >
           When true, logs which objects would be dropped without actually dropping them.
           Defaults to true for safety.
       - name: exclude_patterns
-        type: list
+        type: list[str]
         description: >
           List of SQL LIKE patterns for table names to exclude from cleanup.
           Example: ["%_backup", "temp_%"]
       - name: include_patterns
-        type: list
+        type: list[str]
         description: >
           List of SQL LIKE patterns for table names to include in cleanup.
           When non-empty, only objects whose names match at least one pattern are considered.
@@ -42,17 +42,17 @@ macros:
         type: string
         description: The database to scan for orphaned objects. Defaults to target.database.
       - name: schemas
-        type: list
+        type: list[str]
         description: >
           List of schemas to scan for orphaned objects. Defaults to [target.schema].
           Example: ["public", "analytics", "staging"]
       - name: exclude_patterns
-        type: list
+        type: list[str]
         description: >
           List of SQL LIKE patterns for table names to exclude from results.
           Example: ["%_backup", "temp_%"]
       - name: include_patterns
-        type: list
+        type: list[str]
         description: >
           List of SQL LIKE patterns for table names to include in results.
           When non-empty, only objects whose names match at least one pattern are considered.
