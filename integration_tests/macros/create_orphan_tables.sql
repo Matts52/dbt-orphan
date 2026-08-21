@@ -35,6 +35,15 @@
     {% do run_query(old_renamed_model_sql) %}
     {{ log('Created old_model_that_was_renamed', info=true) }}
 
+    {% set stale_ephemeral_sql %}
+        create or replace view test_dbt_orphan.ephemeral_model as (
+            select 1 as id, 'stale ephemeral' as name
+        )
+    {% endset %}
+
+    {% do run_query(stale_ephemeral_sql) %}
+    {{ log('Created stale view for ephemeral_model', info=true) }}
+
     {{ log('Orphan tables created successfully', info=true) }}
 {% endmacro %}
 

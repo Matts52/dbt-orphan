@@ -7,5 +7,6 @@ where lower(table_schema) = lower('{{ target.schema }}')
     and lower(table_name) in (
         'orphan_table_for_testing',
         'orphan_view_for_testing',
-        'old_model_that_was_renamed'
+        'old_model_that_was_renamed',
+        'ephemeral_model'
     )

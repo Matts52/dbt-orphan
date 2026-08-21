@@ -10,9 +10,11 @@
         {% set nodes_dict = graph.get('nodes', graph) %}
         {% for unique_id, node in nodes_dict.items() %}
             {% if node.resource_type in ['model', 'seed', 'snapshot'] %}
-                {% if node.schema | lower == schema | lower %}
-                    {% if node.database | lower == database | lower or node.database is none %}
-                        {% do dbt_objects.append(node.name | lower) %}
+                {% if node.config.get('materialized', '') | lower != 'ephemeral' %}
+                    {% if node.schema | lower == schema | lower %}
+                        {% if node.database | lower == database | lower or node.database is none %}
+                            {% do dbt_objects.append(node.name | lower) %}
+                        {% endif %}
                     {% endif %}
                 {% endif %}
             {% endif %}
