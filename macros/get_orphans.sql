@@ -12,10 +12,12 @@
     {% set nodes_dict = graph.get('nodes', graph) %}
     {% for unique_id, node in nodes_dict.items() %}
         {% if node.resource_type in ['model', 'seed', 'snapshot'] %}
-            {% set node_schema = node.schema | lower %}
-            {% if node_schema in dbt_objects_by_schema %}
-                {% if node.database | lower == database | lower or node.database is none %}
-                    {% do dbt_objects_by_schema[node_schema].append(node.name | lower) %}
+            {% if node.config.get('materialized', '') | lower != 'ephemeral' %}
+                {% set node_schema = node.schema | lower %}
+                {% if node_schema in dbt_objects_by_schema %}
+                    {% if node.database | lower == database | lower or node.database is none %}
+                        {% do dbt_objects_by_schema[node_schema].append(node.name | lower) %}
+                    {% endif %}
                 {% endif %}
             {% endif %}
         {% endif %}
@@ -86,10 +88,12 @@
     {% set nodes_dict = graph.get('nodes', graph) %}
     {% for unique_id, node in nodes_dict.items() %}
         {% if node.resource_type in ['model', 'seed', 'snapshot'] %}
-            {% set node_schema = node.schema | lower %}
-            {% if node_schema in dbt_objects_by_schema %}
-                {% if node.database | lower == database | lower or node.database is none %}
-                    {% do dbt_objects_by_schema[node_schema].append(node.name | lower) %}
+            {% if node.config.get('materialized', '') | lower != 'ephemeral' %}
+                {% set node_schema = node.schema | lower %}
+                {% if node_schema in dbt_objects_by_schema %}
+                    {% if node.database | lower == database | lower or node.database is none %}
+                        {% do dbt_objects_by_schema[node_schema].append(node.name | lower) %}
+                    {% endif %}
                 {% endif %}
             {% endif %}
         {% endif %}
@@ -160,10 +164,12 @@
     {% set nodes_dict = graph.get('nodes', graph) %}
     {% for unique_id, node in nodes_dict.items() %}
         {% if node.resource_type in ['model', 'seed', 'snapshot'] %}
-            {% set node_schema = node.schema | lower %}
-            {% if node_schema in dbt_objects_by_schema %}
-                {% if node.database | lower == database | lower or node.database is none %}
-                    {% do dbt_objects_by_schema[node_schema].append(node.name | lower) %}
+            {% if node.config.get('materialized', '') | lower != 'ephemeral' %}
+                {% set node_schema = node.schema | lower %}
+                {% if node_schema in dbt_objects_by_schema %}
+                    {% if node.database | lower == database | lower or node.database is none %}
+                        {% do dbt_objects_by_schema[node_schema].append(node.name | lower) %}
+                    {% endif %}
                 {% endif %}
             {% endif %}
         {% endif %}
