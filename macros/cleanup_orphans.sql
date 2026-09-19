@@ -136,6 +136,77 @@
     {% endif %}
 {% endmacro %}
 
+{% macro redshift__cleanup_orphans(database, schema, dry_run, exclude_patterns, include_patterns, dbt_objects) %}
+    {# Rebuild dbt-managed object list from node.alias, since Redshift objects are physically named after the alias, not the model name #}
+    {% set dbt_objects = [] %}
+    {% set nodes_dict = graph.get('nodes', graph) %}
+    {% for unique_id, node in nodes_dict.items() %}
+        {% if node.resource_type in ['model', 'seed', 'snapshot'] %}
+            {% if node.config.get('materialized', '') | lower != 'ephemeral' %}
+                {% if node.schema | lower == schema | lower %}
+                    {% if node.database | lower == database | lower or node.database is none %}
+                        {% do dbt_objects.append(node.alias | lower) %}
+                    {% endif %}
+                {% endif %}
+            {% endif %}
+        {% endif %}
+    {% endfor %}
+
+    {% set db_objects_query %}
+        select
+            table_name,
+            table_type
+        from information_schema.tables
+        where lower(table_schema) = lower('{{ schema }}')
+            and table_type in ('BASE TABLE', 'VIEW')
+            {% for pattern in exclude_patterns %}
+                and lower(table_name) not like lower('{{ pattern }}')
+            {% endfor %}
+            {% if include_patterns | length > 0 %}
+                and (
+                    {% for pattern in include_patterns %}
+                        lower(table_name) like lower('{{ pattern }}'){% if not loop.last %} or {% endif %}
+                    {% endfor %}
+                )
+            {% endif %}
+        order by table_name
+    {% endset %}
+
+    {% set db_objects = run_query(db_objects_query) %}
+
+    {% set orphaned_count = [] %}
+    {% if db_objects %}
+        {% for row in db_objects %}
+            {% set obj_name = row['table_name'] | lower %}
+            {% if obj_name not in dbt_objects %}
+                {% set object_type = 'VIEW' if row['table_type'] == 'VIEW' else 'TABLE' %}
+                {% set full_name = schema ~ '.' ~ row['table_name'] %}
+
+                {% if dry_run %}
+                    {{ log('[DRY RUN] Would drop ' ~ object_type ~ ' ' ~ full_name ~ ' (not in dbt graph)', info=true) }}
+                {% else %}
+                    {{ log('Dropping orphaned ' ~ object_type ~ ' ' ~ full_name ~ ' (not in dbt graph)', info=true) }}
+                    {% set drop_statement %}
+                        DROP {{ object_type }} IF EXISTS {{ full_name }}
+                    {% endset %}
+                    {% do run_query(drop_statement) %}
+                {% endif %}
+                {% do orphaned_count.append(1) %}
+            {% endif %}
+        {% endfor %}
+    {% endif %}
+
+    {% if orphaned_count | length > 0 %}
+        {% if dry_run %}
+            {{ log('[DRY RUN] Found ' ~ orphaned_count | length ~ ' orphaned object(s) that would be dropped', info=true) }}
+        {% else %}
+            {{ log('Dropped ' ~ orphaned_count | length ~ ' orphaned object(s)', info=true) }}
+        {% endif %}
+    {% else %}
+        {{ log('No orphaned objects found in ' ~ database ~ '.' ~ schema, info=true) }}
+    {% endif %}
+{% endmacro %}
+
 {% macro snowflake__cleanup_orphans(database, schema, dry_run, exclude_patterns, include_patterns, dbt_objects) %}
     {% set db_objects_query %}
         select

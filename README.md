@@ -8,6 +8,7 @@ A dbt package that automatically cleans up orphaned database objects (tables and
 - Snowflake
 - DuckDB
 - BigQuery
+- Redshift
 
 ## Installation
 
@@ -131,3 +132,9 @@ Tested on a live dbt-BigQuery project (dbt 1.10.13, dbt-bigquery 1.10.2) with dr
 - Hyphenated project IDs (e.g. `xyz-dev`) are handled correctly via `adapter.quote(database)`, both in the `INFORMATION_SCHEMA` reference and in the backtick-qualified DROP targets.
 - `get_orphans` unions across all requested datasets in a single query; results are consistent with what `cleanup_orphans` flags per schema.
 - Because BigQuery's `INFORMATION_SCHEMA` is per-dataset, the macro issues one sub-query per schema and unions the results — this is expected behaviour and not a performance concern for typical schema counts.
+
+### Redshift
+
+Redshift's `information_schema.tables` behaves like Postgres, so the query shape matches the default adapter.
+
+- Object names are matched against `node.alias` rather than `node.name`, since Redshift tables and views are physically named after the alias (which can differ from the model's file name via `alias()` or a custom generate_alias_name macro).
