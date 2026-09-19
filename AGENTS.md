@@ -45,6 +45,7 @@ dbt run-operation dbt_stale.cleanup_orphans --args '{schemas: ["public", "analyt
 - `cleanup_orphans`: Main entry point that builds a set of dbt-managed objects from `graph.nodes` and dispatches to adapter-specific implementations
 - `default__cleanup_orphans`: Default implementation using `information_schema.tables`
 - `snowflake__cleanup_orphans`: Snowflake-specific implementation with proper column casing (uppercase `TABLE_NAME`, `TABLE_TYPE`)
+- `redshift__cleanup_orphans`: Redshift-specific implementation that matches objects against `node.alias` instead of `node.name`, since Redshift tables/views are physically named after the alias
 
 ### How It Works
 1. Iterates through provided schemas (or defaults to target.schema)
@@ -57,7 +58,7 @@ dbt run-operation dbt_stale.cleanup_orphans --args '{schemas: ["public", "analyt
 - Uses local package reference (`packages.yml: local: ../`)
 - `create_orphan_tables` macro creates test orphans that should be cleaned up
 - Tests verify orphans are dropped AND kept models survive
-- Supports PostgreSQL and DuckDB adapters (switch via `profile` in `dbt_project.yml`)
+- Supports PostgreSQL and DuckDB adapters for local testing (switch via `profile` in `dbt_project.yml`); Snowflake and Redshift are supported via adapter-specific macros but have no integration test coverage
 
 ## dbt Version Requirements
 - Requires dbt >= 1.1.0 and < 3.0.0
