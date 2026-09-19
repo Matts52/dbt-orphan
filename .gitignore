@@ -10,4 +10,3 @@ duckdb/
 integration_tests/.user.yml
 .sqlfluff
 .DS_Store
-CLAUDE.md
