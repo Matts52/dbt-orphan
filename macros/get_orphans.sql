@@ -16,7 +16,7 @@
                 {% set node_schema = node.schema | lower %}
                 {% if node_schema in dbt_objects_by_schema %}
                     {% if node.database | lower == database | lower or node.database is none %}
-                        {% do dbt_objects_by_schema[node_schema].append(node.name | lower) %}
+                        {% do dbt_objects_by_schema[node_schema].append((node.alias or node.name) | lower) %}
                     {% endif %}
                 {% endif %}
             {% endif %}
@@ -92,7 +92,7 @@
                 {% set node_schema = node.schema | lower %}
                 {% if node_schema in dbt_objects_by_schema %}
                     {% if node.database | lower == database | lower or node.database is none %}
-                        {% do dbt_objects_by_schema[node_schema].append(node.name | lower) %}
+                        {% do dbt_objects_by_schema[node_schema].append((node.alias or node.name) | lower) %}
                     {% endif %}
                 {% endif %}
             {% endif %}
@@ -168,7 +168,7 @@
                 {% set node_schema = node.schema | lower %}
                 {% if node_schema in dbt_objects_by_schema %}
                     {% if node.database | lower == database | lower or node.database is none %}
-                        {% do dbt_objects_by_schema[node_schema].append(node.name | lower) %}
+                        {% do dbt_objects_by_schema[node_schema].append((node.alias or node.name) | lower) %}
                     {% endif %}
                 {% endif %}
             {% endif %}
