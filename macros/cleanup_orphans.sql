@@ -13,7 +13,7 @@
                 {% if node.config.get('materialized', '') | lower != 'ephemeral' %}
                     {% if node.schema | lower == schema | lower %}
                         {% if node.database | lower == database | lower or node.database is none %}
-                            {% do dbt_objects.append(node.name | lower) %}
+                            {% do dbt_objects.append((node.alias or node.name) | lower) %}
                         {% endif %}
                     {% endif %}
                 {% endif %}
