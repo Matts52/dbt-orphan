@@ -24,6 +24,10 @@ echo "3. Creating orphan tables..."
 dbt run-operation create_orphan_tables --profile integration_tests_duckdb
 
 echo ""
+echo "3b. Checking get_orphans reports exactly the orphans, with compact SQL..."
+dbt run-operation assert_get_orphans --profile integration_tests_duckdb
+
+echo ""
 echo "4. Running cleanup_orphans (dry run)..."
 dbt run-operation dbt_orphan.cleanup_orphans \
   --args '{schemas: ["test_dbt_orphan"], dry_run: true}' \
