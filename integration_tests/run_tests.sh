@@ -16,6 +16,10 @@ echo "3. Creating orphan tables (not in dbt graph)..."
 dbt run-operation create_orphan_tables
 
 echo ""
+echo "3b. Checking get_orphans reports exactly the orphans, with compact SQL..."
+dbt run-operation assert_get_orphans
+
+echo ""
 echo "4. Running cleanup_orphans (dry_run first)..."
 dbt run-operation dbt_orphan.cleanup_orphans --args '{schemas: ["test_dbt_orphan"], dry_run: true}'
 
