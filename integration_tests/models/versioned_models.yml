@@ -1,0 +1,22 @@
+version: 2
+
+models:
+  - name: versioned_model
+    latest_version: 2
+    versions:
+      - v: 1
+      - v: 2
+
+  - name: versioned_alias_model
+    latest_version: 2
+    versions:
+      - v: 1
+        config:
+          alias: versioned_alias_custom_v1
+      - v: 2
+
+  - name: versioned_defined_in_model
+    latest_version: 1.5
+    versions:
+      - v: 1.5
+        defined_in: versioned_defined_in_source
