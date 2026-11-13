@@ -17,6 +17,21 @@
         {% do exceptions.raise_compiler_error('get_orphans emitted a run of blank lines; per-node Jinja tags need whitespace control ({%- -%})') %}
     {% endif %}
 
+    {# 3. dbt_objects is one VALUES list, not one select per object (which Snowflake cannot plan at scale) #}
+    {% if 'union all' in (sql | lower).split('db_objects as')[0] %}
+        {% do exceptions.raise_compiler_error('get_orphans built dbt_objects with union all instead of a single values list') %}
+    {% endif %}
+
+    {# 4. Chunking: lists larger than chunk_size are split into several values blocks #}
+    {% set chunked = dbt_orphan._dbt_objects_body({'s': ['a', 'b', 'c']}, chunk_size=2) %}
+    {% if chunked.count('values') != 2 or chunked.count('union all') != 1 %}
+        {% do exceptions.raise_compiler_error('expected 2 chunks for 3 rows at chunk_size=2, got: ' ~ chunked) %}
+    {% endif %}
+    {% set chunked_bq = dbt_orphan._dbt_objects_body({'s': ['a', 'b', 'c']}, use_struct=true, chunk_size=2) %}
+    {% if chunked_bq.count('unnest') != 2 %}
+        {% do exceptions.raise_compiler_error('expected 2 unnest chunks, got: ' ~ chunked_bq) %}
+    {% endif %}
+
     {% set orphans = [] %}
     {% for row in run_query(sql).rows %}
         {% do orphans.append(row['table_name'] | lower) %}

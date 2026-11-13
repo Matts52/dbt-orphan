@@ -25,17 +25,7 @@
 
     {# Build a CTE with all dbt-managed objects #}
     with dbt_objects as (
-        {%- set dbt_object_rows = [] -%}
-        {%- for schema, objects in dbt_objects_by_schema.items() -%}
-            {%- for obj in objects -%}
-                {%- do dbt_object_rows.append("select '" ~ schema ~ "' as schema_name, '" ~ obj ~ "' as object_name") -%}
-            {%- endfor -%}
-        {%- endfor -%}
-        {% if dbt_object_rows | length > 0 %}
-            {{ dbt_object_rows | join(' union all ') }}
-        {% else %}
-            select null as schema_name, null as object_name where false
-        {% endif %}
+        {{ dbt_orphan._dbt_objects_body(dbt_objects_by_schema) }}
     ),
 
     db_objects as (
@@ -101,17 +91,7 @@
 
     {# Build a CTE with all dbt-managed objects #}
     with dbt_objects as (
-        {%- set dbt_object_rows = [] -%}
-        {%- for schema, objects in dbt_objects_by_schema.items() -%}
-            {%- for obj in objects -%}
-                {%- do dbt_object_rows.append("select '" ~ schema ~ "' as schema_name, '" ~ obj ~ "' as object_name") -%}
-            {%- endfor -%}
-        {%- endfor -%}
-        {% if dbt_object_rows | length > 0 %}
-            {{ dbt_object_rows | join(' union all ') }}
-        {% else %}
-            select null as schema_name, null as object_name where false
-        {% endif %}
+        {{ dbt_orphan._dbt_objects_body(dbt_objects_by_schema, use_struct=true) }}
     ),
 
     {# BigQuery INFORMATION_SCHEMA is per-dataset, so union all across each requested schema #}
@@ -177,17 +157,7 @@
 
     {# Build a CTE with all dbt-managed objects #}
     with dbt_objects as (
-        {%- set dbt_object_rows = [] -%}
-        {%- for schema, objects in dbt_objects_by_schema.items() -%}
-            {%- for obj in objects -%}
-                {%- do dbt_object_rows.append("select '" ~ schema ~ "' as schema_name, '" ~ obj ~ "' as object_name") -%}
-            {%- endfor -%}
-        {%- endfor -%}
-        {% if dbt_object_rows | length > 0 %}
-            {{ dbt_object_rows | join(' union all ') }}
-        {% else %}
-            select null as schema_name, null as object_name where false
-        {% endif %}
+        {{ dbt_orphan._dbt_objects_body(dbt_objects_by_schema) }}
     ),
 
     db_objects as (
@@ -253,17 +223,7 @@
 
     {# Build a CTE with all dbt-managed objects #}
     with dbt_objects as (
-        {%- set dbt_object_rows = [] -%}
-        {%- for schema, objects in dbt_objects_by_schema.items() -%}
-            {%- for obj in objects -%}
-                {%- do dbt_object_rows.append("select '" ~ schema ~ "' as schema_name, '" ~ obj ~ "' as object_name") -%}
-            {%- endfor -%}
-        {%- endfor -%}
-        {% if dbt_object_rows | length > 0 %}
-            {{ dbt_object_rows | join(' union all ') }}
-        {% else %}
-            select null as schema_name, null as object_name where false
-        {% endif %}
+        {{ dbt_orphan._dbt_objects_body(dbt_objects_by_schema) }}
     ),
 
     db_objects as (
@@ -304,4 +264,35 @@
         and db.object_name = dbt.object_name
     where dbt.object_name is null
     order by db.schema_name, db.original_table_name
+{% endmacro %}
+
+{# Renders the body of the dbt_objects CTE as a single VALUES list (or UNNEST of structs on BigQuery)
+   instead of one `select ... union all` branch per object, which does not scale on large projects.
+   Very large lists are split into chunks of `chunk_size` rows joined with union all. #}
+{% macro _dbt_objects_body(dbt_objects_by_schema, use_struct=false, chunk_size=5000) %}
+    {%- set rows = [] -%}
+    {%- for schema, objects in dbt_objects_by_schema.items() -%}
+        {%- for obj in objects -%}
+            {%- if use_struct -%}
+                {%- do rows.append("struct('" ~ schema ~ "' as schema_name, '" ~ obj ~ "' as object_name)") -%}
+            {%- else -%}
+                {%- do rows.append("('" ~ schema ~ "', '" ~ obj ~ "')") -%}
+            {%- endif -%}
+        {%- endfor -%}
+    {%- endfor -%}
+
+    {%- if rows | length == 0 -%}
+        {{ return('select null as schema_name, null as object_name where false') }}
+    {%- endif -%}
+
+    {%- set selects = [] -%}
+    {%- for start in range(0, rows | length, chunk_size) -%}
+        {%- set chunk = rows[start:start + chunk_size] | join(', ') -%}
+        {%- if use_struct -%}
+            {%- do selects.append('select schema_name, object_name from unnest([' ~ chunk ~ '])') -%}
+        {%- else -%}
+            {%- do selects.append('select * from (values ' ~ chunk ~ ') as v(schema_name, object_name)') -%}
+        {%- endif -%}
+    {%- endfor -%}
+    {{ return(selects | join(' union all ')) }}
 {% endmacro %}
